@@ -1,2 +1,132 @@
 # automated-test
 自动化测试
+##测试环境搭建
+
+###vagrant搭建一个Linux开发环境：
+VirtualBox安装,麻瓜安装[下载地址](https://www.virtualbox.org/wiki/Downloads)；Vagrant安装[下载地址](https://www.vagrantup.com/downloads.html)
+###进入dos环境下输入命令
+```
+ mkdir ubuntu14.04
+  cd ubuntu14.04
+  vagrant init ubuntu/trusty64 //init 后面跟的是虚拟机名字，可自行取
+  box 下载地址 https://atlas.hashicorp.com/boxes/search
+ # modify the created Vagrantfile configuration file， vagrant 
+ ```
+ init后会上当前目录下生成一个vagrantfile配置文件(可以在后面进入文件修改一些自定义配置，如名字等)，配置win下映射文件时，一定要先在win下建立好该文件夹，否则配置不了。
+ ```
+  vagrant up
+  vagrant ssh
+```
+一般情况下到这里，会出现：ssh client not found的错误。需要装一个第三方客户端进行连接，这里推荐msys2，它可以打造类似于Linux shell下的体验[下载地址](http://sourceforge.net/projects/msys2/)
+ 下载完后麻瓜安装，然后运行，在进行如下安装：
+ ```
+ $ pacman --needed -Sy bash pacman pacman-mirrors msys2-runtime
+
+ $ pacman-Su
+
+ $ pacman -S git #安装git和ssh， 通过msys2就可以在win下使用git了
+ ```
+ 完成以上就可以通过vagrant 启动和管理Ubuntu了。
+###报错注意
+*  检查BIOS里面把Integrated Peripherals设置成打开状态
+*  打上[这个补丁](http://download.virtualbox.org/virtualbox/5.0.10/Oracle_VM_VirtualBox_Extension_Pack-5.0.10-104061.vbox-extpack)
+###安装webdriver I/O:
+我装的是命令行Ubuntu，没有界面，所以需要装一个xvfb来模拟x-server端
+```
+ $ sudo apt-get install xvfb #安装xvfb
+ $ sudo apt-get install firefox #安装Firefox
+ ```
+###安装java
+ ```
+ $ sudo apt-add-repository ppa:webupd8team/java
+ $ sudo apt-get update
+ $ sudo apt-get install oracle-java7-installer
+ $ export JAVA_HOME=/usr/lib/jvm/java-7-oracle # append to your ~/.profile file.
+ ```
+###安装nodejs
+ 
+ ```
+ $ curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.25.2/install.sh | bash //首先装个nodejs版本管理器，方便管理
+ $ nvm #nodejs版本管理器 看是否有输出，有就安装成功了
+ $ nvm install 0.12 #可去官网查看最新版本 
+ ```
+###安装selenium-standalone server
+
+ ```
+ $ npm install selenium-standalone@latest -g //npm是nodejs的包管理和分发工具，-g表示全局安装
+ $ selenium-standalone install
+ $ xvfb-run --server-args="-screen 0, 1366x768x24" selenium-standalone start
+  ```
+**注意：完成后另开一个shell  这是模拟的一个 server端  不然后续无法继续**
+
+##测试准备
+
+```
+ $ mkdir my-test
+ $ cd my-test
+ $ npm init -y # 初始化nodejs项目 *一定不能忘记 
+ ```
+ ** Vagrant init初始化项目**我在安装使用cucumber的时候，就忘记init初始化项目了，出现一堆错误，把自己玩得够呛。so,每个npm装的包，都不能少了这步！！！不要再犯如是低级错误
+ ```
+ $ npm install webdriverio #安装 webdriverio 包
+ $ nano baidu-test.js
+ $ # vim baidu-test.js #这里我用的是nano，不过在学习vim
+ ```
+ 
+###附个百度的小测试
+baidu-test.js
+```
+var webdriverio = require('webdriverio');
+var options = {
+  desiredCapabilities: {
+    browserName: 'firefox'
+  }
+};
+var browser = webdriverio
+  .remote(options)
+  .init();
+
+browser
+  .url('https://www.baidu.com')
+  .title(function(err, res) {
+      console.log('Title was: ' + res.value);
+  })
+  .end();
+```
+~~~
+node baidu-test.js
+Title was: 百度一下，你就知道
+~~~
+如果你对coffeeScript也感兴趣可以用coffee来做测试
+ baidu-test.coffee
+ ```
+webdriverio = require 'webdriverio'
+options =
+  desiredCapabilities:
+    browserName: 'firefox'
+
+webdriverio
+  .remote options
+  .init()
+  .url 'https://www.baidu.com'
+  .title (err, res)->
+    console.log 'Title was: ' + res.value
+  .end()
+# this is a comments
+```
+```
+$ npm install -g coffee（安装）
+$ coffee baidu-test.coffee
+Title was: 百度一下，你就知道
+```
+附上一个javascript与coffeescript[语法对比](http://coffeescript.org/),IBM 翻译的[中文文档](http://www.ibm.com/developerworks/cn/views/web/libraryview.jsp?search_by=%E5%88%9D%E6%AD%A5%E4%BA%86%E8%A7%A3+CoffeeScript)
+以上，就是我在**Ubuntu下搭建selenium自动化测试框架**的学习总结。刚刚学习这方面的知识，多有不足，希望各位多多指教。
+###补充：
+*vagrant up 自己在云上面加box的时候，资源差就选择放弃。迅雷下载后手动添加
+*手动添加
+```
+     vagrant box add Boxname（自定义取） boxname（下载下来的box） 
+     vagrant init Boxname
+     vagrant up
+   ```  
+   [box下载地址](https://atlas.hashicorp.com/boxes/search)
